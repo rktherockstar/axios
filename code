@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axios Examples</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+<div id="res"></div>
+
+<script>
+  // GET REQUEST
+  function getTodos() {
+    axios.get('https://jsonplaceholder.typicode.com/todos/1')
+      .then(response => showOutput(response))
+      .catch(error => console.error(error));
+  }
+
+  // POST REQUEST
+  function addTodo() {
+    axios.post('https://jsonplaceholder.typicode.com/todos', {
+      title: 'New Todo',
+      completed: false
+    })
+    .then(response => showOutput(response))
+    .catch(error => console.error(error));
+  }
+
+  // PUT/PATCH REQUEST
+  function updateTodo() {
+    axios.patch('https://jsonplaceholder.typicode.com/todos/1', {
+      title: 'Updated Todo',
+      completed: true
+    })
+    .then(response => showOutput(response))
+    .catch(error => console.error(error));
+  }
+
+  // DELETE REQUEST
+  function removeTodo() {
+    axios.delete('https://jsonplaceholder.typicode.com/todos/1')
+      .then(response => showOutput(response))
+      .catch(error => console.error(error));
+  }
+
+  // SIMULTANEOUS DATA
+  function getData() {
+    axios.all([
+      axios.get('https://jsonplaceholder.typicode.com/todos?_limit=5'),
+      axios.get('https://jsonplaceholder.typicode.com/posts?_limit=5')
+    ])
+    .then(axios.spread((todos, posts) => {
+      showOutput(todos);
+      showOutput(posts);
+    }))
+    .catch(error => console.error(error));
+  }
+
+  // CUSTOM HEADERS
+  function customHeaders() {
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer your_token'
+      }
+    };
+
+    axios.post('https://jsonplaceholder.typicode.com/todos', {
+      title: 'New Todo',
+      completed: false
+    }, config)
+    .then(response => showOutput(response))
+    .catch(error => console.error(error));
+  }
+
+  // TRANSFORMING REQUESTS & RESPONSES
+  function transformResponse() {
+    const options = {
+      transformResponse: axios.defaults.transformResponse.concat(data => {
+        data.title = data.title.toUpperCase();
+        return data;
+      })
+    };
+
+    axios.get('https://jsonplaceholder.typicode.com/todos/1', options)
+      .then(response => showOutput(response))
+      .catch(error => console.error(error));
+  }
+
+  // ERROR HANDLING
+  function errorHandling() {
+    axios.get('https://jsonplaceholder.typicode.com/todoss') // Typo in the URL
+      .then(response => showOutput(response))
+      .catch(error => {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error('Response Error:', error.response.data);
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error('Request Error:', error.request);
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error('General Error:', error.message);
+        }
+      });
+  }
+
+  // CANCEL TOKEN
+  function cancelToken() {
+    const source = axios.CancelToken.source();
+
+    axios.get('https://jsonplaceholder.typicode.com/todos/1', {
+      cancelToken: source.token
+    })
+    .then(response => showOutput(response))
+    .catch(thrown => {
+      if (axios.isCancel(thrown)) {
+        console.error('Request canceled:', thrown.message);
+      } else {
+        console.error(thrown);
+      }
+    });
+
+    if (true) {
+      source.cancel('Request canceled due to some condition');
+    }
+  }
+
+  // Show output in the browser
+  function showOutput(res) {
+    document.getElementById('res').innerHTML = `
+      <div class="card card-body mb-4">
+        <h5>Status: ${res.status}</h5>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          Headers
+        </div>
+        <div class="card-body">
+          <pre>${JSON.stringify(res.headers, null, 2)}</pre>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          Data
+        </div>
+        <div class="card-body">
+          <pre>${JSON.stringify(res.data, null, 2)}</pre>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-header">
+          Config
+        </div>
+        <div class="card-body">
+          <pre>${JSON.stringify(res.config, null, 2)}</pre>
+        </div>
+      </div>
+    `;
+  }
+
